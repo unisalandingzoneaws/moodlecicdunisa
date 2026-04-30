@@ -2,6 +2,7 @@ import { Repository } from 'aws-cdk-lib/aws-codecommit'
 import { BuildSpec } from 'aws-cdk-lib/aws-codebuild'
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam'
 import { CodeBuildStep, CodePipeline, CodePipelineSource, ShellStep } from 'aws-cdk-lib/pipelines'
+import { PipelineType } from 'aws-cdk-lib/aws-codepipeline'
 import { CfnOutput, Stack, type StackProps } from 'aws-cdk-lib'
 import { type Construct } from 'constructs'
 import { Deployment } from './stages'
@@ -18,12 +19,16 @@ export class CodePipelineStack extends Stack {
     const validatePolicy = new PolicyStatement({
       actions: [
         'cloudformation:DescribeStacks',
-        'events:DescribeEventBus'
+        'elasticloadbalancing:Describe*',
+        'efs:Describe*',
+        'rds:Describe*',
+        'autoscaling:Describe*'
       ],
       resources: ['*']
     })
 
     const pipeline = new CodePipeline(this, 'Pipeline', {
+      pipelineType: PipelineType.V2,
       crossAccountKeys: true,
       enableKeyRotation: true,
       synth: new ShellStep('Synth', {
@@ -122,44 +127,7 @@ export class CodePipelineStack extends Stack {
         })
       ]
     })
-    // Add test deployment
-    const testStage = new Deployment(this, 'Test')
-    pipeline.addStage(testStage, {
-      // Execute validation check for post-deployment
-      post: [
-        new CodeBuildStep('Validate', {
-          env: {
-            STAGE: testStage.stageName
-          },
-          installCommands: [
-            'make warming'
-          ],
-          commands: [
-            'make validate'
-          ],
-          rolePolicyStatements: [validatePolicy]
-        })
-      ]
-    })
-    // Add prod deployment
-    const prodStage = new Deployment(this, 'Prod')
-    pipeline.addStage(prodStage, {
-      // Execute validation check for post-deployment
-      post: [
-        new CodeBuildStep('Validate', {
-          env: {
-            STAGE: prodStage.stageName
-          },
-          installCommands: [
-            'make warming'
-          ],
-          commands: [
-            'make validate'
-          ],
-          rolePolicyStatements: [validatePolicy]
-        })
-      ]
-    })
+
     // Output
     new CfnOutput(this, 'RepositoryName', {
       value: repo.repositoryName

@@ -71,9 +71,21 @@ describe('Unit tests for the pipeline stack', () => {
     })
   })
 
+  test('Only Dev stage exists — no Test or Prod stages', () => {
+    const templateJson = template.toJSON()
+    const pipelineResources = template.findResources('AWS::CodePipeline::Pipeline')
+    const pipelineLogicalId = Object.keys(pipelineResources)[0]
+    const stages = templateJson.Resources[pipelineLogicalId].Properties.Stages as Array<{ Name: string }>
+    const stageNames = stages.map((s) => s.Name)
+
+    expect(stageNames).toContain('Dev')
+    expect(stageNames).not.toContain('Test')
+    expect(stageNames).not.toContain('Prod')
+  })
+
   // Summary checks
   test('Expected number of the CodeBuild objects', () => {
-    const expectedValue = 8
+    const expectedValue = 6
     template.resourceCountIs('AWS::CodeBuild::Project', expectedValue)
   })
 
@@ -83,7 +95,7 @@ describe('Unit tests for the pipeline stack', () => {
   })
 
   test('Expected number of IAM roles', () => {
-    const expectedValue = 12
+    const expectedValue = 10
     template.resourceCountIs('AWS::IAM::Role', expectedValue)
   })
 })
