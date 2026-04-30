@@ -116,7 +116,7 @@ export class CodePipelineStack extends Stack {
             phases: {
               install: {
                 'runtime-versions': {
-                  ruby: '2.6'
+                  ruby: '3.2'
                 }
               }
             }
