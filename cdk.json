@@ -1,5 +1,6 @@
 {
   "app": "npx ts-node --prefer-ts-exts bin/code_pipeline.ts",
+  "profile": "moodle",
   "watch": {
     "include": [
       "**"
@@ -27,6 +28,7 @@
     "@aws-cdk/core:target-partitions": [
       "aws",
       "aws-cn"
-    ]
+    ],
+    "@aws-cdk/aws-autoscaling:generateLaunchTemplateInsteadOfLaunchConfig": true
   }
 }

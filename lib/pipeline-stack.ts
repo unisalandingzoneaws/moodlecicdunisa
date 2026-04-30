@@ -31,6 +31,18 @@ export class CodePipelineStack extends Stack {
       pipelineType: PipelineType.V2,
       crossAccountKeys: true,
       enableKeyRotation: true,
+      selfMutationCodeBuildDefaults: {
+        rolePolicy: [
+          new PolicyStatement({
+            actions: ['ssm:GetParameter'],
+            resources: ['arn:aws:ssm:*:*:parameter/cdk-bootstrap/*']
+          }),
+          new PolicyStatement({
+            actions: ['sts:AssumeRole'],
+            resources: ['arn:aws:iam::*:role/cdk-*']
+          })
+        ]
+      },
       synth: new ShellStep('Synth', {
         input: CodePipelineSource.codeCommit(repo, 'main'),
         installCommands: [

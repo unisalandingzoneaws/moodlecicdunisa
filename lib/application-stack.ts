@@ -45,8 +45,6 @@ export class ApplicationStack extends Stack {
 
     // Cross-stack ingress rules — use CfnSecurityGroupIngress to avoid
     // circular dependency (NetworkStack ↔ ApplicationStack).
-    // Placing the L1 ingress resources in ApplicationStack means the
-    // dependency is one-directional: ApplicationStack → NetworkStack.
     new ec2.CfnSecurityGroupIngress(this, 'EfsIngressFromAsg', {
       ipProtocol: 'tcp',
       fromPort: 2049,
@@ -74,6 +72,8 @@ export class ApplicationStack extends Stack {
     })
 
     // ASG with Amazon Linux 2023, t3.medium
+    // Feature flag @aws-cdk/aws-autoscaling:generateLaunchTemplateInsteadOfLaunchConfig
+    // ensures CDK generates a LaunchTemplate instead of deprecated LaunchConfiguration
     const asg = new autoscaling.AutoScalingGroup(this, 'MoodleAsg', {
       vpc: props.vpc,
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM),

@@ -4,19 +4,26 @@ import { NetworkStack } from '../lib/network-stack'
 import { ApplicationStack } from '../lib/application-stack'
 
 describe('Moodle ApplicationStack', () => {
-  const app = new cdk.App()
-  const networkStack = new NetworkStack(app, 'Dev-NetworkStack')
-  const applicationStack = new ApplicationStack(app, 'Dev-ApplicationStack', {
-    vpc: networkStack.vpc,
-    fileSystem: networkStack.fileSystem,
-    auroraCluster: networkStack.auroraCluster,
-    efsSg: networkStack.efsSg,
-    auroraSg: networkStack.auroraSg
+  let template: Template
+
+  beforeAll(() => {
+    const app = new cdk.App({
+      context: {
+        '@aws-cdk/aws-autoscaling:generateLaunchTemplateInsteadOfLaunchConfig': true
+      }
+    })
+    const networkStack = new NetworkStack(app, 'Dev-NetworkStack')
+    const applicationStack = new ApplicationStack(app, 'Dev-ApplicationStack', {
+      vpc: networkStack.vpc,
+      fileSystem: networkStack.fileSystem,
+      auroraCluster: networkStack.auroraCluster,
+      efsSg: networkStack.efsSg,
+      auroraSg: networkStack.auroraSg
+    })
+    const assembly = app.synth()
+    const stackArtifact = assembly.getStackByName(applicationStack.stackName)
+    template = Template.fromJSON(stackArtifact.template as Record<string, unknown>)
   })
-  // Use _toCloudFormation() to avoid circular dependency during synthesis
-  // (ApplicationStack ↔ NetworkStack cross-stack SG references)
-  const cfn: Record<string, unknown> = (applicationStack as any)._toCloudFormation()
-  const template = Template.fromJSON(cfn)
 
   test('ALB is internet-facing', () => {
     template.hasResourceProperties('AWS::ElasticLoadBalancingV2::LoadBalancer', {
@@ -38,8 +45,10 @@ describe('Moodle ApplicationStack', () => {
   })
 
   test('ASG instance type is t3.medium', () => {
-    template.hasResourceProperties('AWS::AutoScaling::LaunchConfiguration', {
-      InstanceType: 't3.medium'
+    template.hasResourceProperties('AWS::EC2::LaunchTemplate', {
+      LaunchTemplateData: {
+        InstanceType: 't3.medium'
+      }
     })
   })
 
