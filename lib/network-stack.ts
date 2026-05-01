@@ -76,6 +76,7 @@ export class NetworkStack extends Stack {
       securityGroups: [this.auroraSg],
       credentials: rds.Credentials.fromGeneratedSecret('moodleadmin'),
       defaultDatabaseName: 'moodle',
+      storageEncrypted: true,
       backup: { retention: { toDays: () => 1 } as any },
       deletionProtection: false,
       removalPolicy: RemovalPolicy.DESTROY
