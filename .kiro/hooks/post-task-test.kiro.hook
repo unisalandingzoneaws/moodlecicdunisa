@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Run Tests After Task",
+  "description": "Automatically runs npm test after each spec task is marked complete. If tests fail, the agent will see the output and fix the code before proceeding to the next task.",
+  "version": "1",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npm test 2>&1; echo \"EXIT_CODE=$?\"",
+    "timeout": 120
+  }
+}

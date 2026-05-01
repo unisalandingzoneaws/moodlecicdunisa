@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Pre-Task Spec Check",
+  "description": "Before starting each task, remind the agent to check the requirements and design documents, follow the spec precisely, and ensure the implementation matches the acceptance criteria.",
+  "version": "1",
+  "when": {
+    "type": "preTaskExecution"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before implementing this task, review the requirements and design documents at .kiro/specs/app-pipeline-separation/requirements.md and .kiro/specs/app-pipeline-separation/design.md. Ensure your implementation matches the acceptance criteria exactly. If the task involves creating or modifying TypeScript files, verify CDK synth works after your changes by running 'npx cdk synth' before marking the task complete."
+  }
+}

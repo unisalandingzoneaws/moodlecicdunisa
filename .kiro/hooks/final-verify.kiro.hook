@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Final Verification",
+  "description": "After all tasks are done and the agent stops, remind to run the full verification suite (build, test, lint, synth) and commit the changes.",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before finishing, run the full verification: 1) make build (cdk synth), 2) make unittest (npm test), 3) make linting (npm run lint). If any step fails, fix the issues. Then commit all changes with a descriptive message and push to the codecommit remote to trigger the pipeline."
+  }
+}

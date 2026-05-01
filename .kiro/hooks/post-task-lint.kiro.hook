@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Run Linting After Task",
+  "description": "Automatically runs ESLint after each spec task is marked complete. If linting fails, the agent will see the errors and fix them before proceeding.",
+  "version": "1",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npm run lint 2>&1; echo \"EXIT_CODE=$?\"",
+    "timeout": 60
+  }
+}
