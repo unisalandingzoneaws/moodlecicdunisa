@@ -104,71 +104,20 @@ export class ApplicationStack extends Stack {
       }
     })
 
-    // UserData script
-    const secretArn = props.auroraCluster.secret?.secretArn ?? ''
-    const dbEndpoint = props.auroraCluster.clusterEndpoint.hostname
-    const efsId = props.fileSystem.fileSystemId
-    const region = Stack.of(this).region
-
+    // UserData script — simple hello world for pipeline validation
     asg.addUserData(
       '#!/bin/bash',
       'set -e',
       '',
-      '# Install Apache, PHP, and required extensions',
-      'dnf install -y httpd php php-mysqlnd php-xml php-mbstring php-curl php-zip php-gd php-intl php-soap php-opcache php-json amazon-efs-utils unzip jq',
+      '# Install Apache',
+      'dnf install -y httpd',
+      '',
+      '# Create a simple hello world page',
+      'echo "<html><body><h1>Hello World - Moodle Pipeline Test</h1></body></html>" > /var/www/html/index.html',
       '',
       '# Start and enable Apache',
       'systemctl start httpd',
-      'systemctl enable httpd',
-      '',
-      '# Mount EFS for moodledata',
-      'mkdir -p /var/moodledata',
-      `mount -t efs ${efsId}:/ /var/moodledata`,
-      'chmod 0777 /var/moodledata',
-      '',
-      '# Download and install Moodle',
-      'cd /var/www/html',
-      'curl -L -o moodle-latest.tgz https://download.moodle.org/download.php/direct/stable405/moodle-latest-405.tgz',
-      'tar xzf moodle-latest.tgz',
-      'mv moodle/* .',
-      'rm -rf moodle moodle-latest.tgz',
-      'chown -R apache:apache /var/www/html',
-      '',
-      '# Retrieve Aurora credentials from Secrets Manager',
-      `SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id "${secretArn}" --region "${region}" --query SecretString --output text)`,
-      'DB_USER=$(echo "$SECRET_JSON" | jq -r .username)',
-      'DB_PASS=$(echo "$SECRET_JSON" | jq -r .password)',
-      '',
-      '# Configure Moodle config.php',
-      'cat > /var/www/html/config.php << MOODLECONFIG',
-      '<?php',
-      'unset($CFG);',
-      'global $CFG;',
-      '$CFG = new stdClass();',
-      '$CFG->dbtype    = \'mysqli\';',
-      '$CFG->dblibrary = \'native\';',
-      `$CFG->dbhost    = '${dbEndpoint}';`,
-      '$CFG->dbname    = \'moodle\';',
-      '$CFG->dbuser    = \'$DB_USER\';',
-      '$CFG->dbpass    = \'$DB_PASS\';',
-      '$CFG->prefix    = \'mdl_\';',
-      '$CFG->dboptions = array(',
-      "    'dbpersist' => 0,",
-      "    'dbport'    => 3306,",
-      "    'dbsocket'  => '',",
-      "    'dbcollation' => 'utf8mb4_unicode_ci',",
-      ');',
-      '$CFG->wwwroot   = \'http://\' . $_SERVER[\'HTTP_HOST\'];',
-      '$CFG->dataroot  = \'/var/moodledata\';',
-      '$CFG->admin     = \'admin\';',
-      '$CFG->directorypermissions = 0777;',
-      'require_once(__DIR__ . \'/lib/setup.php\');',
-      'MOODLECONFIG',
-      '',
-      'chown apache:apache /var/www/html/config.php',
-      '',
-      '# Restart Apache to pick up changes',
-      'systemctl restart httpd'
+      'systemctl enable httpd'
     )
 
     // CloudFormation Outputs
